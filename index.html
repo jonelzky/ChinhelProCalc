@@ -211,12 +211,13 @@ body {
   font-size: 1.4rem;
 }
 
-/* FIXED BOTTOM CALCULATOR - COMPACT LAYOUT */
+/* CALCULATOR - Pareho na sa ibang tab */
 #sciTab {
   display: none;
   flex-direction: column;
-  height: calc(100vh - 85px);
-  justify-content: flex-end;
+  height: auto;
+  min-height: auto;
+  justify-content: flex-start;
 }
 
 #sciTab.active {
@@ -226,11 +227,11 @@ body {
 #sciTab .calc-container {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
-  padding-bottom: 4px;
+  padding-bottom: 10px;
 }
 
 #sciTab .calc-display-container {
@@ -239,15 +240,16 @@ body {
   justify-content: flex-end;
 }
 
+/* Inayos ko yung doble mong .calc-history - ito na lang yung gagamitin */
 .calc-history {
   text-align: right;
   color: var(--mut);
-  font-size: 20px; /* Pinalaki ko nang konti mula 14px */
-  margin-bottom: 50px;
+  font-size: 14px;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 90px;
+  gap: 4px;
+  max-height: 80px;
   overflow-y: auto;
   width: 100%;
 }
@@ -279,16 +281,16 @@ body {
 #sciTab .calc-screen {
   margin-bottom: 4px;
   padding: 0 4px;
+  min-height: 60px;
 }
 
-/* Naka-stick na sa pinakailalim parang footer */
+/* Tinanggal ko yung sticky - yan yung nagpapaliit sa WebView */
 #sciTab .calc-grid {
-  position: sticky;
-  bottom: 0;
-  background: var(--bg);
-  padding-bottom: 4px;
-  margin-bottom: 0;
-  border-top: 1px solid var(--border);
+  position: static;
+  background: transparent;
+  padding-bottom: 0;
+  margin-bottom: 10px;
+  border-top: none;
 }
 
 .pill {
@@ -691,8 +693,7 @@ body {
     <b style="font-size:14px;color:var(--orange)">⚡ Generator & Transformer kVA Sizing</b>
     <div style="margin-top:10px">
       <label style="font-size:11px;font-weight:bold;color:var(--mut)">TOTAL LOAD (WATTS):</label>
-      <input id="genWatts" class="pill" placeholder="e.g. 50000" style="margin-top:6px;width:100%;" oninput="calcSolarGen()">
-    </div>
+<input id="genWatts" class="pill" placeholder="e.g. 50000" style="margin-top:6px;width:100%;" oninput="calcGen()">    </div>
     <div style="margin-top:12px;background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:14px;font-size:13px;line-height:1.6;color:var(--text);">
       <div id="genResult" style="font-weight:900;color:var(--orange)">Mag-input ng watts para sa kVA rating.</div>
     </div>
@@ -1562,6 +1563,28 @@ BOM Guide:
         window.currentProposalText = summaryText;
     } else {
         solarResultDiv.innerHTML = "Mag-input ng Watts at Dami ng Panel para makita ang specs.";
+    }
+
+    // --- GENERATOR & TRANSFORMER FIX - DINAGDAG ---
+    const genWatts = parseFloat(document.getElementById('genWatts').value) || 0;
+    const genDiv = document.getElementById('genResult');
+    if (genDiv) {
+        if (genWatts <= 0) {
+            genDiv.innerHTML = "Mag-input ng watts para sa kVA rating.";
+        } else {
+            const kva = genWatts / 1000 / 0.8;
+            const kvaWithReserve = kva * 1.25;
+            const sizes = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150, 200, 250];
+            let recommended = sizes.find(s => s >= kvaWithReserve) || Math.ceil(kvaWithReserve);
+
+            genDiv.innerHTML = `
+                - Total Load: <b style="color:var(--cyan);">${genWatts.toLocaleString()} Watts</b><br>
+                - Required kVA (PF 0.8): <b>${kva.toFixed(2)} kVA</b><br>
+                - With 25% Reserve: <b style="color:var(--orange);">${kvaWithReserve.toFixed(2)} kVA</b><br>
+                - Recommended GenSet: <b style="color:var(--cyan);">${recommended} kVA</b><br>
+                - Recommended Transformer: <b>${recommended} kVA</b>
+            `;
+        }
     }
 }
 
